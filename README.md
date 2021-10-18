@@ -5,7 +5,7 @@
 
 ###### Documentação API
 
-> Após iniciar a aplicação, acessar o seguinte endereço no browser: [http://localhost:8080/swagger-ui.html#/]
+> Após iniciar a aplicação, acessar o seguinte endereço no browser: [http://localhost:8080/swagger-ui.html]
 
 ###### Tecnologias Utilizadas
 - Java 1.8 (Oracle)
