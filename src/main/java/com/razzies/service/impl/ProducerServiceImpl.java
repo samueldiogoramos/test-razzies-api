@@ -1,11 +1,9 @@
 package com.razzies.service.impl;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.google.common.collect.Lists;
 import com.razzies.entity.MovieEntity;
 import com.razzies.entity.ProducerEntity;
+import com.razzies.model.ProducerGroup;
 import com.razzies.model.ProducerWinner;
 import com.razzies.repository.MovieRepository;
 import com.razzies.repository.ProducerRepository;
@@ -28,120 +27,148 @@ public class ProducerServiceImpl implements ProducerService{
 	private MovieRepository movieRepository;
 	
 	private static final Long COUNT_WIN = 1L;
+	
+	private Integer year = 0;
+	private Integer countMoviesProducers = 0;
 
 	@Override
 	public void saveAll(final List<ProducerEntity> producers) {
 		producerRepository.saveAll(producers);
 	}
+	
+	@Override
+	public ProducerEntity findByName(String name) {
+		return producerRepository.findByName(name);
+	}
 
-	public ProducerWinner getProducerWithLongerRange2Awards() {
-		final List<MovieEntity> movieEntities = movieRepository.findByWinner(true);
-		ProducerWinner producerWinner = null;
+	@Override
+	public List<ProducerWinner> getProducerWithLongerRange2Awards() {
+		final List<ProducerWinner> producerWinnerMax = Lists.newArrayList();
 		
-		final List<Entry<String, List<ProducerWinner>>> producersWithMore2Wins = getProducersWithMore2Wins(movieEntities);
+		final List<ProducerGroup> producerGroups = producerRepository.findProducersGroup();
+		final Map<String, Map<Integer, List<MovieEntity>>> mapProducerGroup = createMapProducerGroup(producerGroups);
+		Map<String, Integer> mapProducerCount = mapProducerCount(mapProducerGroup);
 		
-		final Map<Integer, String> map = calculateWinningPeriod(producersWithMore2Wins);
+		final Entry<String, Integer> max = mapProducerCount.entrySet().stream()
+			.max((m1, m2) -> m1.getValue().compareTo(m2.getValue()))
+			.orElse(null);
 		
-		final Entry<Integer, String> mapName = map.entrySet().stream()
-				.max((m1, m2) -> m1.getKey().compareTo(m2.getKey()))
+		if(max != null) {
+			final Map<Integer, List<MovieEntity>> a = mapProducerGroup.get(max.getKey());
+			
+			producerWinnerMax.add(ProducerWinner.builder()
+					.interval(max.getValue())
+					.producer(max.getKey())
+					.previousWin(getYearPreviousWin(a.get(max.getValue())))
+					.followingWin(getYearFollowingWin(a.get(max.getValue())))
+					.build());
+		}
+			
+		return producerWinnerMax;
+	}
+	
+	@Override
+	public List<ProducerWinner> getProducerWhoGot2AwardsFaster() {
+		final List<ProducerWinner> producerWinnerMax = Lists.newArrayList();
+		
+		final List<ProducerGroup> producerGroups = producerRepository.findProducersGroup();
+		final Map<String, Map<Integer, List<MovieEntity>>> mapProducerGroup = createMapProducerGroup(producerGroups);
+		Map<String, Integer> mapProducerCount = mapProducerCount(mapProducerGroup);
+		
+		final Entry<String, Integer> max = mapProducerCount.entrySet().stream()
+				.min((m1, m2) -> m1.getValue().compareTo(m2.getValue()))
 				.orElse(null);
 		
-		if(mapName != null) {
-			producerWinner = ProducerWinner.builder().name(mapName.getValue()).build();
+		if(max != null) {
+			final Map<Integer, List<MovieEntity>> a = mapProducerGroup.get(max.getKey());
+			
+			producerWinnerMax.add(ProducerWinner.builder()
+					.interval(max.getValue())
+					.producer(max.getKey())
+					.previousWin(getYearPreviousWin(a.get(max.getValue())))
+					.followingWin(getYearFollowingWin(a.get(max.getValue())))
+					.build());
 		}
 		
-		return producerWinner;
-	}
-
-	public ProducerWinner getProducerWhoGot2AwardsFaster() {
-		final List<MovieEntity> movieEntities = movieRepository.findByWinner(true);
-		ProducerWinner producerWinner = null;
-		
-		final List<Entry<String, List<ProducerWinner>>> producersWithMore2Wins = getProducersWithMore2Wins(movieEntities);
-		
-		Map<Integer, String> map = calculateWinningPeriod(producersWithMore2Wins);
-
-		final Entry<Integer, String> mapName = map.entrySet().stream()
-				.min((m1, m2) -> m1.getKey().compareTo(m2.getKey()))
-				.orElse(null);
-		
-		if(mapName != null) {
-			producerWinner = ProducerWinner.builder().name(mapName.getValue()).build();
-		}
-
-		return producerWinner;
+		return producerWinnerMax;
 	}
 	
-	private Map<Integer, String> calculateWinningPeriod(final List<Entry<String, List<ProducerWinner>>> producersWithMore2Wins) {
-		final Map<Integer, String> map = new HashMap<Integer, String>();
-
-		producersWithMore2Wins.stream().forEach(p -> {
-			final List<Integer> years = Lists.newArrayList();
-
-			for (ProducerWinner entry : p.getValue()) {
-				years.add(entry.getYear());
-			}
-
-			Arrays.sort(years.toArray());
-
-			//TODO Melhorar lógica para prever produtor com mais de 2 vitórias
-			if (years.size() == 2) {
-				map.put(years.get(1) - years.get(0), p.getKey());
-			}
-		});
-
-		return map;
-	}
-	
-	private List<Entry<String, List<ProducerWinner>>> getProducersWithMore2Wins(final List<MovieEntity> movieEntities) {
-		final List<Entry<String, List<ProducerWinner>>> producersWithMore2Wins = Lists.newArrayList();
+	private Integer getYearPreviousWin(final List<MovieEntity> movieEntities) {
+		final MovieEntity movieEntity = movieEntities.stream()
+			.min((m1, m2) -> m1.getYear().compareTo(m2.getYear()))
+			.get();
 		
-		final List<ProducerWinner> producerWinners = convertoToListProducerWinner(movieEntities);
+		return movieEntity.getYear();
+	}
 
-		final Map<String, Long> producersPlusOneWin = filterPlusOneWin(producerWinners);
-
-		final Map<String, List<ProducerWinner>> producersGroupWithMovies = groupProducersWithMovies(producerWinners);
-
-		producersPlusOneWin.entrySet().stream().forEach(p -> {
-			producersWithMore2Wins.add(producersGroupWithMovies.entrySet()
-					.stream()
-					.filter(pp -> pp.getKey().equals(p.getKey()))
-					.findFirst()
-					.get());
-		});
+	private Integer getYearFollowingWin(final List<MovieEntity> movieEntities) {
+		final MovieEntity movieEntity = movieEntities.stream()
+				.max((m1, m2) -> m1.getYear().compareTo(m2.getYear()))
+				.get();
 		
-		return producersWithMore2Wins;
+		return movieEntity.getYear();
 	}
 	
-	private Map<String, List<ProducerWinner>> groupProducersWithMovies(final List<ProducerWinner> producerWinners) {
-		return producerWinners.stream()
-				.collect(Collectors.groupingBy(ProducerWinner::getName));
-	}
-	
-	private Map<String, Long> filterPlusOneWin(final List<ProducerWinner> producerWinners) {
-		return producerWinners.stream()
-				.collect(Collectors.groupingBy(ProducerWinner::getName, Collectors.counting()))
-				.entrySet()
-				.stream()
-				.filter(p -> p.getValue() > COUNT_WIN)
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-	}
-	
-	private List<ProducerWinner> convertoToListProducerWinner (final List<MovieEntity> movieEntities) {
-		List<ProducerWinner> producerWinners = Lists.newArrayList();
+	private Map<String, Integer> mapProducerCount(final Map<String, Map<Integer, List<MovieEntity>>> map) {
+		final Map<String, Integer> mapProducerCount = new HashMap<String, Integer>();
 		
-		movieEntities.forEach(m -> {
-			m.getProducers().forEach(p -> {
-				producerWinners.add(ProducerWinner.builder()
-						.year(m.getYear())
-						.name(p.getName())
-						.build());
+		map.entrySet().stream().forEach(m -> {
+			String key = m.getKey();
+			
+			m.getValue().entrySet().stream().forEach(mm -> {
+				mapProducerCount.put(key, mm.getKey());
 			});
 		});
 		
-		producerWinners.sort((pw1, pw2) -> pw1.getName().compareTo(pw2.getName()));
-		
-		return producerWinners;
+		return mapProducerCount;
 	}
 
+	private Map<String, Map<Integer, List<MovieEntity>>> createMapProducerGroup(final List<ProducerGroup> producerGroups) {
+		final Map<String, Map<Integer, List<MovieEntity>>> map = new HashMap<String, Map<Integer, List<MovieEntity>>>();
+		
+		producerGroups.stream()
+			.filter(p -> p.getCount() > COUNT_WIN)
+			.forEach(p -> {
+				map.put(p.getName(), groupProducerWinners(p));
+			});
+		
+		return map;
+	}
+	
+	private Map<Integer, List<MovieEntity>> groupProducerWinners(ProducerGroup producerGroup) {
+		final List<MovieEntity> movieEntities = movieRepository.findByProducersIdAndWinner(producerGroup.getId(), true);
+		final Map<Integer, List<MovieEntity>> map = new HashMap<>();
+		
+		movieEntities.sort((m1, m2) -> m1.getYear().compareTo(m2.getYear()));
+		
+		setYear(0);
+		
+		movieEntities.forEach(m -> {
+			if(!getYear().equals(0)) {
+				setCountMoviesProducers(m.getYear() - year);
+			}else {
+				setYear(m.getYear());
+			}
+		});
+		
+		map.put(getCountMoviesProducers(), movieEntities);
+		
+		return map;
+	}
+
+	private Integer getYear() {
+		return this.year;
+	}
+	
+	private void setYear(Integer updateYear) {
+		this.year = updateYear;
+	}
+
+	public Integer getCountMoviesProducers() {
+		return countMoviesProducers;
+	}
+
+	public void setCountMoviesProducers(Integer countMoviesProducers) {
+		this.countMoviesProducers = countMoviesProducers;
+	}
 }

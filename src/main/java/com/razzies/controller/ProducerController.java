@@ -1,5 +1,7 @@
 package com.razzies.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,17 +27,17 @@ public class ProducerController {
 		ResponseEntity<ProducerResponse> httpEntity = null;
 		
 		try {
-			final ProducerWinner producerWithLongerRange2Awards = producerService.getProducerWithLongerRange2Awards();
-			final ProducerWinner producerWhoGot2AwardsFaster = producerService.getProducerWhoGot2AwardsFaster();
+			final List<ProducerWinner> max = producerService.getProducerWithLongerRange2Awards();
+			final List<ProducerWinner> min = producerService.getProducerWhoGot2AwardsFaster();
 			
-			if(producerWithLongerRange2Awards == null && producerWhoGot2AwardsFaster == null) {
+			if(max.isEmpty() && min.isEmpty()) {
 				throw new NotFoundException("Not found producers");
 			}
 			
 			httpEntity = new ResponseEntity<ProducerResponse>(ProducerResponse.builder()
-					.producerWithLongerRange2Awards(producerWithLongerRange2Awards)
-					.producerWhoGot2AwardsFaster(producerWhoGot2AwardsFaster)
-					.build(), HttpStatus.OK);
+																.max(max)
+																.min(min)
+																.build(), HttpStatus.OK);
 		}catch (NotFoundException e) {
 			httpEntity = new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}catch (Exception e) {

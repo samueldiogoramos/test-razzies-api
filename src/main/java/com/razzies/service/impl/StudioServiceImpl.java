@@ -20,4 +20,9 @@ public class StudioServiceImpl implements StudioService{
 		studioRepository.saveAll(studios);
 	}
 
+	@Override
+	public StudioEntity findByName(String name) {
+		return studioRepository.findByName(name);
+	}
+
 }

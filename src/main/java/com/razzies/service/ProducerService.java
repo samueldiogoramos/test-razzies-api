@@ -8,8 +8,10 @@ import com.razzies.model.ProducerWinner;
 public interface ProducerService {
 	void saveAll(List<ProducerEntity> producers);
 	
-	ProducerWinner getProducerWithLongerRange2Awards();
+	ProducerEntity findByName(String name);
 	
-	ProducerWinner getProducerWhoGot2AwardsFaster();
+	List<ProducerWinner> getProducerWithLongerRange2Awards();
+	
+	List<ProducerWinner> getProducerWhoGot2AwardsFaster();
 	
 }

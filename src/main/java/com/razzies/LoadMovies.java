@@ -54,17 +54,17 @@ public class LoadMovies implements ApplicationRunner {
 	public void run(ApplicationArguments args) throws Exception {
 
 		final File file = ResourceUtils.getFile(String.format("classpath:static/%s", fileLoad));
-		final List<MovieEntity> movies = Lists.newArrayList();
+		final List<MovieEntity> movieEntities = Lists.newArrayList();
 
 		Files.lines(file.toPath())
 			.skip(HEADER)
 			.map(line -> line.split(DELIMITTER_SEMICOLON))
 			.map(cols -> convertToMovie(cols))
 			.forEach(movie -> {
-				movies.add(movie);
+				movieEntities.add(movie);
 			});
 
-		movieService.saveAll(movies);
+		movieService.saveAll(movieEntities);
 	}
 
 	private MovieEntity convertToMovie(final String[] cols) {
@@ -78,18 +78,30 @@ public class LoadMovies implements ApplicationRunner {
 	}
 
 	private List<StudioEntity> convertToStudioList(final String string) {
-		final List<StudioEntity> studios = Lists.newArrayList();
+		final List<StudioEntity> studiosEntities = Lists.newArrayList();
+		final List<StudioEntity> studiosEntitiesSave = Lists.newArrayList();
 		
 		Arrays.stream(string.split(DELIMITER_COMMA))
 			.forEach(studio -> {
-				studios.add(StudioEntity.builder()
-						.name(StringUtils.trim(studio))
-						.build());
+				final String studioName = StringUtils.trim(studio);
+				
+				StudioEntity studioEntity = studioService.findByName(studioName);
+				
+				if(studioEntity == null) {
+					studioEntity = StudioEntity.builder()
+							.name(studioName)
+							.build();
+					
+					studiosEntitiesSave.add(studioEntity);
+				}
+				
+				studiosEntities.add(studioEntity);
+				
 			});
 		
-		studioService.saveAll(studios);
+		studioService.saveAll(studiosEntitiesSave);
 		
-		return studios;
+		return studiosEntities;
 	}
 	
 	private List<ProducerEntity> convertToProducerList(final String string) {
@@ -100,24 +112,35 @@ public class LoadMovies implements ApplicationRunner {
 				producers.addAll(splitProducerName(producer));
 			});
 		
-		producerService.saveAll(producers);
-		
 		return producers;
 	}
 	
 	private List<ProducerEntity> splitProducerName(final String producer){
 		List<ProducerEntity> producerEntities = Lists.newArrayList();
+		List<ProducerEntity> producerEntitiesSave = Lists.newArrayList();
 		
 		final String [] names = producer.split(DELIMITER_AND);
 		
 		for(int i=0; i<names.length; i++) {
-			String nome = StringUtils.trim(names[i]);
+			String name = StringUtils.trim(names[i]);
 			
-			if(StringUtils.isNotBlank(nome))
-				producerEntities.add(ProducerEntity.builder()
-						.name(nome)
-						.build());
+			if(StringUtils.isNotBlank(name)) {
+				ProducerEntity producerEntity = producerService.findByName(name);
+				
+				if(producerEntity == null) {
+					producerEntity = ProducerEntity.builder()
+							.name(name)
+							.build();
+					
+					producerEntitiesSave.add(producerEntity);
+				}
+				
+				producerEntities.add(producerEntity);
+				
+			}
 		}
+		
+		producerService.saveAll(producerEntitiesSave);
 		
 		return producerEntities;
 	}

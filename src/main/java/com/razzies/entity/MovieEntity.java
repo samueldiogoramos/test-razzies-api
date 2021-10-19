@@ -7,13 +7,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "movie")
@@ -21,6 +22,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+
+@ToString
 public class MovieEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,10 +35,10 @@ public class MovieEntity {
 	@Column(name = "title", nullable = false)
 	private String title;
 
-	@OneToMany
+	@ManyToMany
 	private List<StudioEntity> studios;
 
-	@OneToMany
+	@ManyToMany
 	private List<ProducerEntity> producers;
 
 	@Column(name = "winner", nullable = false)
