@@ -4,12 +4,13 @@ import java.util.List;
 
 import com.razzies.entity.ProducerEntity;
 import com.razzies.model.ProducerWinner;
+import com.razzies.model.RankingType;
 
 public interface ProducerService {
 	void saveAll(List<ProducerEntity> producers);
 	
-	ProducerWinner getProducerWithLongerRange2Awards();
+	ProducerEntity findByName(String name);
 	
-	ProducerWinner getProducerWhoGot2AwardsFaster();
+	List<ProducerWinner> getProducersByRankingType(RankingType rankingType);
 	
 }

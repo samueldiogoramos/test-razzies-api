@@ -1,4 +1,4 @@
-package com.razzies;
+package com.razzies.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

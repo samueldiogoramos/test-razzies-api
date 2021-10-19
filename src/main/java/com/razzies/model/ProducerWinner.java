@@ -11,5 +11,8 @@ public class ProducerWinner {
 	@JsonIgnore
 	private Integer year;
 	
-	private String name;
+	private String producer;
+	private Integer interval;
+	private Integer previousWin;
+	private Integer followingWin;
 }

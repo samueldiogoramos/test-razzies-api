@@ -6,4 +6,5 @@ import com.razzies.entity.StudioEntity;
 
 public interface StudioRepository extends JpaRepository<StudioEntity, Long>{
 
+	StudioEntity findByName(final String name);
 }
