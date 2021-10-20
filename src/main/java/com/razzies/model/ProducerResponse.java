@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.List;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
 @Builder
-@Data
+@Getter
 public class ProducerResponse implements Serializable {
 	private static final long serialVersionUID = 7818393828764708120L;
 

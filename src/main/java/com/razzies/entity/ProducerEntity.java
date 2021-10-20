@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Entity
 @Table(name = "producer")
@@ -19,8 +18,6 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-
-@ToString
 public class ProducerEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

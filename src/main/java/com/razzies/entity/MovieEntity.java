@@ -14,7 +14,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Entity
 @Table(name = "movie")
@@ -22,8 +21,6 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-
-@ToString
 public class MovieEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

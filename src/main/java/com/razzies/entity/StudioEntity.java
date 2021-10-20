@@ -9,13 +9,11 @@ import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "studio")
 @Builder
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudioEntity {

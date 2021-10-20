@@ -3,10 +3,10 @@ package com.razzies.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
 @Builder
+@Getter
 public class ProducerWinner {
 	@JsonIgnore
 	private Integer year;
